@@ -21,6 +21,21 @@ body {
     
 }
 
+.title text {
+    font-family: serif;
+    fill: #acacac;
+    font-size: 12px;
+    font-weight: bold;
+    
+}
+
+.m text {
+    font-family: sans-serif;
+    fill: #C0C0C0;
+    font-size: 11px;
+    
+}
+
 .brush .extent {
   stroke: #fff;
   fill-opacity: .125;
@@ -71,11 +86,11 @@ body {
 <body>
 <script src="http://d3js.org/d3.v3.js"></script>
 <script>
-var margin = {top: 10, right: 10, bottom: 20, left: 40},
-    margin1 = {top: 50, right: 10, bottom: 385, left: 40},
-    margin2 = {top: 140, right: 10, bottom: 295, left: 40},
-    margin3 = {top: 230, right: 10, bottom: 205, left: 40},
-    margin4 = {top: 320, right: 10, bottom: 115, left: 40},
+var margin = {top: 20, right: 10, bottom: 20, left: 40},
+    margin1 = {top: 60, right: 10, bottom: 375, left: 40},
+    margin2 = {top: 150, right: 10, bottom: 285, left: 40},
+    margin3 = {top: 240, right: 10, bottom: 195, left: 40},
+    margin4 = {top: 330, right: 10, bottom: 105, left: 40},
     margin5 = {top: 430, right: 10, bottom: 20, left: 40},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom,
@@ -93,9 +108,11 @@ var margin = {top: 10, right: 10, bottom: 20, left: 40},
 
 var parseDate = d3.time.format("%d/%m/%Y %H:%M").parse,
     formatDate = d3.time.format("%Y - %B"),
+    formatWind = d3.format("0.2f");
     bisectDate = d3.bisector(function(d) { return d.date; }).left,
-    formatOutput = function(d) { return d.date + " - " + d.pm25 + " µg/m³"; },
-    formatOutput2 = function(d) { return d.ws + " m/s from " + (d['Wind Direction']) ; };
+    formatOutput = function(d) { return d.date; },
+    formatOutput1 = function(d) { return d.pm25 + " µg/m³"; },
+    formatOutput2 = function(d) { return formatWind(d.ws) + " m/s from " + (d['Wind Direction']) ; };
     formatOutput3 = function(d) { return d.SeaLevelPressurehPa + " hPA"; };
 
 var x = d3.time.scale().range([0, width])
@@ -111,6 +128,12 @@ var x = d3.time.scale().range([0, width])
     
 <!-- defines the range for x and y variables for top chart and x2 and y2 for lower chart-->
 
+arr = ["0   N","90   E","180   S","270   W","360   N"];
+
+var formatAxis = function(d, i) {
+       return arr[i];      
+    }
+    
 var xAxis = d3.svg.axis().scale(x).orient("bottom"),
     xAxis2 = d3.svg.axis().scale(x2).orient("bottom"),
     xAxis3 = d3.svg.axis().scale(x3).orient("bottom"),
@@ -118,7 +141,7 @@ var xAxis = d3.svg.axis().scale(x).orient("bottom"),
     xAxis5 = d3.svg.axis().scale(x5).orient("bottom"),
     yAxis = d3.svg.axis().scale(y).innerTickSize(-width).outerTickSize(0).tickPadding(10).orient("left");
     yAxis2 = d3.svg.axis().scale(y2).innerTickSize(-width).outerTickSize(0).tickPadding(10).orient("left");
-    yAxis3 = d3.svg.axis().scale(y3).tickValues([0,90,180,270,360]).innerTickSize(-width).outerTickSize(0).tickPadding(10).orient("left");
+    yAxis3 = d3.svg.axis().scale(y3).ticks(5).tickValues([0,90,180,270,360]).tickFormat(formatAxis).innerTickSize(-width).outerTickSize(0).tickPadding(10).orient("left");
     yAxis4 = d3.svg.axis().scale(y4).ticks(6).innerTickSize(-width).outerTickSize(0).tickPadding(10).orient("left");
 
 
@@ -222,10 +245,9 @@ d3.csv("january_december_2013_test.csv", type, function(error, data) {
       //.text("PM 2.5");
       
   focus1.append("g")
-        .attr("class", "y axis")
+        .attr("class", "title")
         .append("text")
         .attr("x", (width/2))				
-        //.attr("y", 0 + margin.top )
         .attr("dy", "-.71em")
         .attr("text-anchor", "middle")	 	
         .text("Air Pollution (PM 2.5)");
@@ -246,10 +268,9 @@ d3.csv("january_december_2013_test.csv", type, function(error, data) {
       .text(" m/s");
       
   focus2.append("g")
-        .attr("class", "y axis")
+        .attr("class", "title")
         .append("text")
         .attr("x", (width/2))				
-        //.attr("y", 0 + margin2.top )
         .attr("text-anchor", "middle")	 	
         .text("Wind Speed");
       
@@ -264,13 +285,12 @@ d3.csv("january_december_2013_test.csv", type, function(error, data) {
         .attr("cy", function(d) { return y3(d.wd); });      
         
   focus3.append("g")
-        .attr("class", "y axis")
+        .attr("class", "title")
         .append("text")
         .attr("x", (width/2))				
-        //.attr("y", 0 + margin2.top )
         .attr("dy", "-.71em")
         .attr("text-anchor", "middle")	 	
-        .text("Wind Direction");
+        .text("Wind Direction (degrees)");
         
   focus3.append("g")
       .attr("class", "y axis")
@@ -278,9 +298,17 @@ d3.csv("january_december_2013_test.csv", type, function(error, data) {
       .append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 6)
-      .attr("dy", ".71em")
+      .attr("dy", ".5em")
       .style("text-anchor", "end")
         
+    focus3.append("g")
+      .attr("class", "y axis")
+      .call(yAxis3)
+      .append("text")
+      .attr("x", 0 - (margin.left/2))
+      .attr("dy", "-.5em")
+      .style("text-anchor", "middle");
+      
   focus4.append("path")
       .datum(data)
       .attr("clip-path", "url(#clip)")
@@ -297,7 +325,7 @@ d3.csv("january_december_2013_test.csv", type, function(error, data) {
       .text("hPa");
       
   focus4.append("g")
-        .attr("class", "y axis")
+        .attr("class", "title")
         .append("text")
         .attr("x", (width/2))				
         //.attr("y", 0 + margin2.top )
@@ -329,19 +357,27 @@ d3.csv("january_december_2013_test.csv", type, function(error, data) {
       
   details.append("line")
       .attr("class", "x")
-      .attr("y1", (height - margin1.top - margin1.bottom))
+      .attr("y1", margin.top )
       .attr("y2", heightGuideline );
       
   focus.append("text")
-      .attr("class", "y")
+      .attr("class", "m")
+      .attr("font-family", "serif")
+      //.attr("dy", "-1 em");
+      
+  focus1.append("text")
+      .attr("class", "y1")
+      .attr("font-family", "serif")
       .attr("dy", "-1em");
 
   focus2.append("text")
       .attr("class", "y2")
+      .attr("font-family", "serif")
       .attr("dy", "-1em");
-
+      
   focus4.append("text")
       .attr("class", "y4")
+      .attr("font-family", "serif")
       .attr("dy", "-1em");
       
 <!-- above is the line that is appended onto the top chart "focus" -->    
@@ -353,7 +389,7 @@ focus.append("rect")
       .on("mouseover", function() { details.style("display", null); })
       .on("mouseout", function() { details.style("display", "none"); })
       .on("mousemove", mousemove);
-      
+
 function mousemove() {
     var x0 = x.invert(d3.mouse(this)[0]),
         i = bisectDate(data, x0, 1),
@@ -361,12 +397,25 @@ function mousemove() {
         d1 = data[i],
         d = x0 - d0.date > d1.date - x0 ? d1 : d0;
     details.select(".x").attr("transform", "translate(" + x(d.date) + ",0)");
-    focus.select("text.y").attr("transform", "translate(" + x(d.date) + "," + y(d.pm25) + ")").text(formatOutput(d));
+    focus.select("text.m").attr("transform", "translate(" + x(d.date) + ")").text(formatOutput(d));
+    focus1.select("text.y1").attr("transform", "translate(" + x(d.date) + "," + y(d.pm25) + ")").text(formatOutput1(d));
     focus2.select("text.y2").attr("transform", "translate(" + x2(d.date) + "," + y2(d.ws) + ")").text(formatOutput2(d));
     focus4.select("text.y4").attr("transform", "translate(" + x4(d.date) + "," + y4(d.SeaLevelPressurehPa) + ")").text(formatOutput3(d));
   }
 
 });
+function scoreFormat(d) {
+    if (d == 0) {
+        return "0 N";
+    } else if (d <= 89 && d > 0){
+        return "90 E";
+    } else if (d == 180) {
+        return "180 S";
+    } else if (d == 270) {
+        return "270 W";    
+    }    
+    return "360 N";
+}
 
 function brush() {
   x.domain(brush.empty() ? x5.domain() : brush.extent());
